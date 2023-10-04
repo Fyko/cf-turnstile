@@ -2,6 +2,7 @@
 name = "cf-turnstile"
 version = "0.1.0"
 edition = "2021"
+description = "A Rust client for Cloudflare Turnstile"
 homepage = "https://github.com/sycertech/cf-turnstile"
 repository = "https://github.com/sycertech/cf-turnstile"
 categories = ["api-bindings", "asynchronous", "web-programming::http-client"]
