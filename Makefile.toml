@@ -1,0 +1,100 @@
+[tasks.setup]
+script = '''
+    echo # things required for `cargo make test`
+    cargo install cargo-nextest
+
+    echo # things required by `cargo make coverage`
+    rustup component add llvm-tools-preview
+    cargo install cargo-llvm-cov
+'''
+
+[tasks.lint]
+install_crate = "clippy"
+command = "cargo"
+args = [
+    "clippy",
+    "--tests",
+    "--examples",
+    "--all-targets",
+    "--all-features",
+]
+
+[tasks.lint-ci]
+install_crate = "clippy"
+command = "cargo"
+args = [
+    "clippy",
+    "--tests",
+    "--examples",
+    "--all-targets",
+    "--all-features",
+    "--",
+    "-D",
+    "warnings",
+]
+
+[tasks.format]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--all"]
+
+[tasks.fmt]
+alias = "format"
+
+[tasks.format-ci]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--all", "--", "--check"]
+
+
+[tasks.test]
+env = { "RUN_MODE" = "test", "RUST_LOG" = "info" }
+command = "cargo"
+args = ["nextest", "run", "${@}"]
+
+[tasks.test-ci]
+env = { "RUN_MODE" = "ci", "RUST_LOG" = "info" }
+command = "cargo"
+args = ["nextest", "run"]
+
+[tasks.cov]
+command = "cargo"
+env = { "RUN_MODE" = "test" }
+args = [
+    "llvm-cov", "nextest",
+    "${@}"
+]
+
+[tasks.cov-ci]
+command = "cargo"
+env = { "RUN_MODE" = "ci" }
+args = [
+    "llvm-cov", "nextest",
+    "--lcov", "--output-path", "lcov.info"
+]
+
+[tasks.docs]
+command = "cargo"
+args = [
+    "doc",
+    "--no-deps",
+    "--all-features",
+    "--document-private-items",
+]
+
+[tasks.docs-watch]
+command = "cargo"
+args = [
+    "doc",
+    "--no-deps",
+    "--all-features",
+    "--document-private-items",
+]
+watch = true
+
+[tasks.timings]
+script = '''
+    cargo clean
+    cargo build --release --quiet --timings
+	open /target/cargo-timings/cargo-timing.html
+'''
