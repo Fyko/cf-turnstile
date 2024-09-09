@@ -1,11 +1,13 @@
 #![doc = include_str!("../README.md")]
 use connector::Connector;
 use error::{SiteVerifyErrors, TurnstileError};
+use http_body_util::{BodyExt, Full};
 use hyper::{
-    client::Client as HyperClient,
+    body::Bytes,
     header::{CONTENT_TYPE, USER_AGENT},
-    Body, Method, Request,
+    Method, Request,
 };
+use hyper_util::{client::legacy::Client as HyperClient, rt::TokioExecutor};
 use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +20,7 @@ mod test;
 /// A client for the Cloudflare Turnstile API.
 pub struct TurnstileClient {
     secret: Secret<String>,
-    http: HyperClient<Connector>,
+    http: HyperClient<Connector, Full<Bytes>>,
 }
 
 /// Represents a request to the Turnstile API.
@@ -92,7 +94,8 @@ impl TurnstileClient {
     /// Create a new Turnstile client.
     pub fn new(secret: Secret<String>) -> Self {
         let connector = connector::create();
-        let http = hyper::Client::builder().build(connector);
+        let http =
+            hyper_util::client::legacy::Client::builder(TokioExecutor::new()).build(connector);
 
         Self { http, secret }
     }
@@ -112,7 +115,7 @@ impl TurnstileClient {
             request.clone()
         };
 
-        let body = Body::from(serde_json::to_string(&request)?);
+        let body = Full::new(Bytes::from(serde_json::to_string(&request)?));
 
         let request = Request::builder()
             .method(Method::POST)
@@ -124,7 +127,7 @@ impl TurnstileClient {
 
         let response = self.http.request(request).await?;
 
-        let body_bytes = hyper::body::to_bytes(response).await?;
+        let body_bytes = response.collect().await?.to_bytes();
         let body = serde_json::from_slice::<RawSiteVerifyResponse>(&body_bytes)?;
 
         if !body.error_codes.is_empty() {

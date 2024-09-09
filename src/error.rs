@@ -20,6 +20,10 @@ pub enum TurnstileError {
     #[error("Turnstile API error: {0:?}")]
     SiteVerifyError(SiteVerifyErrors),
 
+    /// The error originated from Legacy Hyper.
+    #[error("Legacy hyper error: {0:?}")]
+    LegacyHyperError(#[from] hyper_util::client::legacy::Error),
+
     /// The error originated from Hyper.
     #[error("Hyper error: {0:?}")]
     HyperError(#[from] hyper::Error),

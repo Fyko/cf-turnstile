@@ -52,7 +52,7 @@ async fn test_token_already_spent() -> Result<()> {
     assert!(validated.is_err());
     match validated.unwrap_err() {
         TurnstileError::SiteVerifyError(e) => match e.first().unwrap() {
-            SiteVerifyError::TimeoutOrDuplicate => {},
+            SiteVerifyError::TimeoutOrDuplicate => {}
             _ => panic!("Unexpected error"),
         },
         e => panic!("Unexpected error: {}", e),
